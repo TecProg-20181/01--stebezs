@@ -19,17 +19,21 @@ typedef struct _image {
 //colocar o else
 // These function is used only for define a color
 int max (int firstColor, int secondColor) {
-    if (firstColor > secondColor)
-        return firstColor;
-    return secondColor;
+    if (firstColor > secondColor){
+         return firstColor;
+    } 
+    else {
+        return secondColor;
+    }
 }
 
 int equal_pixel (Pixel firstPixel, Pixel secondPixel) {
-    if (firstPixel.r == secondPixel.r &&
-        firstPixel.g == secondPixel.g &&
-        firstPixel.b == secondPixel.b)
+    if (firstPixel.r == secondPixel.r && firstPixel.g == secondPixel.g && firstPixel.b == secondPixel.b){
         return 1;
-    return 0;
+    } 
+    else {
+        return 0;
+    }
 }
 
 
@@ -212,8 +216,11 @@ int main() {
                 int w = img.width;
                 int h = img.height;
 
-                if (horizontal == 1) w /= 2;
-                else h /= 2;
+                if (horizontal == 1) {
+                    w /= 2;
+                } else {
+                    h /= 2;
+                }
 
                 for (int column1 = 0; column1 < h; ++column1) {
                     for (int column2 = 0; column2 < w; ++column2) {
@@ -221,8 +228,12 @@ int main() {
                         int x = column1;
                         int y = column2;
 
-                        if (horizontal == 1) y = img.width - 1 - column2;
-                        else x = img.height - 1 - column1;
+                        if (horizontal == 1) {
+                            y = img.width - 1 - column2;
+                        } else {
+                            x = img.height - 1 - column1;
+                        }
+                        
 
                         Pixel aux1;
                         aux1.r = img.pixel[column1][column2][0];
