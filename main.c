@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 typedef struct _pixel {
+    // Is a RGB (red, green, blue) type of image for an additive color system
     unsigned short int r;
     unsigned short int g;
     unsigned short int b;
@@ -8,122 +9,116 @@ typedef struct _pixel {
 
 typedef struct _image {
     // [width][height][rgb]
-    // 0 -> r
-    // 1 -> g
-    // 2 -> b
+    // width and height = 512, with is the size of the matrix of image
+    // rgb = 3, with is the colors spectrum
     unsigned short int pixel[512][512][3];
-    unsigned int w;
-    unsigned int h;
+    unsigned int width;
+    unsigned int height;
 } Image;
 
-
-int max(int a, int b) {
-    if (a > b)
-        return a;
-    return b;
+//colocar o else
+// These function is used only for define a color
+int max (int firstColor, int secondColor) {
+    if (firstColor > secondColor)
+        return firstColor;
+    return secondColor;
 }
 
-int pixel_igual(Pixel p1, Pixel p2) {
-    if (p1.r == p2.r &&
-        p1.g == p2.g &&
-        p1.b == p2.b)
+int equal_pixel (Pixel firstPixel, Pixel secondPixel) {
+    if (firstPixel.r == secondPixel.r &&
+        firstPixel.g == secondPixel.g &&
+        firstPixel.b == secondPixel.b)
         return 1;
     return 0;
 }
 
 
-Image escala_de_cinza(Image img) {
-    /*for (unsigned int i = 0; i < img.h; ++i) {
-        for (unsigned int j = 0; j < img.w; ++j) {
-            print("%u", img.pixel[i][j][0] + img.pixel[i][j][1] + img.pixel[i][j][2]);
-        }
-    }*/
+Image grey_scale (Image img) {
 
-    for (unsigned int i = 0; i < img.h; ++i) {
-        for (unsigned int j = 0; j < img.w; ++j) {
-            int media = img.pixel[i][j][0] +
-                        img.pixel[i][j][1] +
-                        img.pixel[i][j][2];
+    for (unsigned int column1 = 0; column1 < img.height; ++column1) {
+        for (unsigned int column2 = 0; column2 < img.width; ++column2) {
+            int media = img.pixel[column1][column2][0] +
+                        img.pixel[column1][column2][1] +
+                        img.pixel[column1][column2][2];
             media /= 3;
-            img.pixel[i][j][0] = media;
-            img.pixel[i][j][1] = media;
-            img.pixel[i][j][2] = media;
+            img.pixel[column1][column2][0] = media;
+            img.pixel[column1][column2][1] = media;
+            img.pixel[column1][column2][2] = media;
         }
     }
 
     return img;
 }
 
-void blur(unsigned int h, unsigned short int pixel[512][512][3], int T, unsigned int w) {
-    for (unsigned int i = 0; i < h; ++i) {
-        for (unsigned int j = 0; j < w; ++j) {
+void blur (unsigned int height, unsigned short int pixel[512][512][3], int aux, unsigned int width) {
+    for (unsigned int firstColumn = 0; firstColumn < height; ++firstColumn) {
+        for (unsigned int secondColumn = 0; secondColumn < width; ++secondColumn) {
             Pixel media = {0, 0, 0};
-
-            int menor_h = (h - 1 > i + T/2) ? i + T/2 : h - 1;
-            int min_w = (w - 1 > j + T/2) ? j + T/2 : w - 1;
-            for(int x = (0 > i - T/2 ? 0 : i - T/2); x <= menor_h; ++x) {
-                for(int y = (0 > j - T/2 ? 0 : j - T/2); y <= min_w; ++y) {
-                    media.r += pixel[x][y][0];
-                    media.g += pixel[x][y][1];
-                    media.b += pixel[x][y][2];
+            
+            int lowerHeight = (height - 1 > firstColumn + aux/2) ? firstColumn + aux/2 : height - 1;
+            int minimumWidth = (width - 1 > secondColumn + aux/2) ? secondColumn + aux/2 : width - 1;
+            
+            for(int mark = (0 > firstColumn - aux/2 ? 0 : firstColumn - aux/2); mark <= lowerHeight; ++mark) {
+                for(int label = (0 > secondColumn - aux/2 ? 0 : secondColumn - aux/2); label <= minimumWidth; ++label) {
+                    media.r += pixel[mark][label][0];
+                    media.g += pixel[mark][label][1];
+                    media.b += pixel[mark][label][2];
                 }
             }
 
-            // printf("%u", media.r)
-            media.r /= T * T;
-            media.g /= T * T;
-            media.b /= T * T;
+            media.r /= aux * aux;
+            media.g /= aux * aux;
+            media.b /= aux * aux;
 
-            pixel[i][j][0] = media.r;
-            pixel[i][j][1] = media.g;
-            pixel[i][j][2] = media.b;
+            pixel[firstColumn][secondColumn][0] = media.r;
+            pixel[firstColumn][secondColumn][1] = media.g;
+            pixel[firstColumn][secondColumn][2] = media.b;
         }
     }
 }
 
-Image rotacionar90direita(Image img) {
-    Image rotacionada;
+Image rotate_90_right (Image img) {
+    Image rotated;
 
-    rotacionada.w = img.h;
-    rotacionada.h = img.w;
+    rotated.width = img.height;
+    rotated.height = img.width;
 
-    for (unsigned int i = 0, y = 0; i < rotacionada.h; ++i, ++y) {
-        for (int j = rotacionada.w - 1, x = 0; j >= 0; --j, ++x) {
-            rotacionada.pixel[i][j][0] = img.pixel[x][y][0];
-            rotacionada.pixel[i][j][1] = img.pixel[x][y][1];
-            rotacionada.pixel[i][j][2] = img.pixel[x][y][2];
+    for (unsigned int columnOne = 0, lineOne = 0; columnOne < rotated.height; ++columnOne, ++lineOne) {
+        for (int columnTwo = rotated.width - 1, lineTwo = 0; columnTwo >= 0; --columnTwo, ++lineTwo) {
+            rotated.pixel[columnOne][columnTwo][0] = img.pixel[lineOne][lineTwo][0];
+            rotated.pixel[columnOne][columnTwo][1] = img.pixel[lineOne][lineTwo][1];
+            rotated.pixel[columnOne][columnTwo][2] = img.pixel[lineOne][lineTwo][2];
         }
     }
 
-    return rotacionada;
+    return rotated;
 }
 
-void inverter_cores(unsigned short int pixel[512][512][3],
-                    unsigned int w, unsigned int h) {
-    for (unsigned int i = 0; i < h; ++i) {
-        for (unsigned int j = 0; j < w; ++j) {
-            pixel[i][j][0] = 255 - pixel[i][j][0];
-            pixel[i][j][1] = 255 - pixel[i][j][1];
-            pixel[i][j][2] = 255 - pixel[i][j][2];
+void invert_colors (unsigned short int pixel[512][512][3], unsigned int width, unsigned int height) {
+    for (unsigned int column1 = 0; column1 < height; ++column1) {
+        for (unsigned int column2 = 0; column2 < width; ++column2) {
+            pixel[column1][column2][0] = 255 - pixel[column1][column2][0];
+            pixel[column1][column2][1] = 255 - pixel[column1][column2][1];
+            pixel[column1][column2][2] = 255 - pixel[column1][column2][2];
         }
     }
 }
 
-Image cortar_imagem(Image img, int x, int y, int w, int h) {
-    Image cortada;
+Image cut_image (Image img, int firtsRow, int secondRow, int w, int h) {
+    Image cutting;
 
-    cortada.w = w;
-    cortada.h = h;
+    cutting.width = w;
+    cutting.height = h;
 
-    for(int i = 0; i < h; ++i) {
-        for(int j = 0; j < w; ++j) {
-            cortada.pixel[i][j][0] = img.pixel[i + y][j + x][0];
-            cortada.pixel[i][j][1] = img.pixel[i + y][j + x][1];
-            cortada.pixel[i][j][2] = img.pixel[i + y][j + x][2];
+    for(int firstColumn = 0; firstColumn < h; ++firstColumn) {
+        for(int secondColumn = 0; secondColumn < w; ++secondColumn) {
+            cutting.pixel[firstColumn][secondColumn][0] = img.pixel[firstColumn + firtsRow][secondColumn + secondRow][0];
+            cutting.pixel[firstColumn][secondColumn][1] = img.pixel[firstColumn + firtsRow][secondColumn + secondRow][1];
+            cutting.pixel[firstColumn][secondColumn][2] = img.pixel[firstColumn + firtsRow][secondColumn + secondRow][2];
         }
     }
 
-    return cortada;
+    return cutting;
 }
 
 
@@ -131,98 +126,112 @@ int main() {
     Image img;
 
     // read type of image
-    char p3[4];
-    scanf("%s", p3);
+    char readImage[4];
+    scanf("%s", readImage);
 
     // read width height and color of image
     int max_color;
-    scanf("%u %u %d", &img.w, &img.h, &max_color);
+    scanf("%u %u %d", &img.width, &img.height, &max_color);
 
     // read all pixels of image
-    for (unsigned int i = 0; i < img.h; ++i) {
-        for (unsigned int j = 0; j < img.w; ++j) {
-            scanf("%hu %hu %hu", &img.pixel[i][j][0],
-                                 &img.pixel[i][j][1],
-                                 &img.pixel[i][j][2]);
+    for (unsigned int columnOne = 0; columnOne < img.height; ++columnOne) {
+        for (unsigned int columnTwo = 0; columnTwo < img.width; ++columnTwo) {
+            scanf("%hu %hu %hu", &img.pixel[columnOne][columnTwo][0],
+                                 &img.pixel[columnOne][columnTwo][1],
+                                 &img.pixel[columnOne][columnTwo][2]);
 
         }
     }
 
-    int n_opcoes;
-    scanf("%d", &n_opcoes);
+    int number_options;
+    scanf("%d", &number_options);
 
-    for(int i = 0; i < n_opcoes; ++i) {
-        int opcao;
-        scanf("%d", &opcao);
+    for(int generic = 0; generic < number_options; ++generic) {
+        int option;
+        scanf("%d", &option);
 
-        switch(opcao) {
-            case 1: { // Escala de Cinza
-                img = escala_de_cinza(img);
+        switch(option) {
+
+            case 1: { 
+                img = grey_scale(img);
                 break;
             }
-            case 2: { // Filtro Sepia
-                for (unsigned int x = 0; x < img.h; ++x) {
-                    for (unsigned int j = 0; j < img.w; ++j) {
-                        unsigned short int pixel[3];
-                        pixel[0] = img.pixel[x][j][0];
-                        pixel[1] = img.pixel[x][j][1];
-                        pixel[2] = img.pixel[x][j][2];
 
+            case 2: { 
+                //Sepia filter
+                for (unsigned int column1 = 0; column1 < img.height; ++column1) {
+                    for (unsigned int column2 = 0; column2 < img.width; ++column2) {
+                        unsigned short int pixel[3];
+
+                        pixel[0] = img.pixel[column1][column2][0];
+                        pixel[1] = img.pixel[column1][column2][1];
+                        pixel[2] = img.pixel[column1][column2][2];
+                        
+                        // p is for pixel
                         int p =  pixel[0] * .393 + pixel[1] * .769 + pixel[2] * .189;
-                        int menor_r = (255 >  p) ? p : 255;
-                        img.pixel[x][j][0] = menor_r;
+                        int minorRange = (255 >  p) ? p : 255;
+
+                        img.pixel[column1][column2][0] = minorRange;
 
                         p =  pixel[0] * .349 + pixel[1] * .686 + pixel[2] * .168;
-                        menor_r = (255 >  p) ? p : 255;
-                        img.pixel[x][j][1] = menor_r;
+                        minorRange = (255 >  p) ? p : 255;
+                        img.pixel[column1][column2][1] = minorRange;
 
                         p =  pixel[0] * .272 + pixel[1] * .534 + pixel[2] * .131;
-                        menor_r = (255 >  p) ? p : 255;
-                        img.pixel[x][j][2] = menor_r;
+                        minorRange = (255 >  p) ? p : 255;
+                        img.pixel[column1][column2][2] = minorRange;
                     }
                 }
 
                 break;
             }
-            case 3: { // Blur
-                int tamanho = 0;
-                scanf("%d", &tamanho);
-                blur(img.h, img.pixel, tamanho, img.w);
+
+            case 3: { 
+                // Blur
+                int size = 0;
+                scanf("%d", &size);
+                blur(img.height, img.pixel, size, img.width);
                 break;
             }
-            case 4: { // Rotacao
-                int quantas_vezes = 0;
-                scanf("%d", &quantas_vezes);
-                quantas_vezes %= 4;
-                for (int j = 0; j < quantas_vezes; ++j) {
-                    img = rotacionar90direita(img);
+            
+            case 4: { 
+                // Rotation
+                int how_many  = 0;
+                scanf("%d", &how_many);
+                how_many %= 4;
+                for (int j = 0; j < how_many; ++j) {
+                    img = rotate_90_right(img);
                 }
                 break;
             }
-            case 5: { // Espelhamento
+
+            case 5: { // Mirroring
                 int horizontal = 0;
                 scanf("%d", &horizontal);
 
-                int w = img.w, h = img.h;
+                int w = img.width;
+                int h = img.height;
 
                 if (horizontal == 1) w /= 2;
                 else h /= 2;
 
-                for (int i2 = 0; i2 < h; ++i2) {
-                    for (int j = 0; j < w; ++j) {
-                        int x = i2, y = j;
+                for (int column1 = 0; column1 < h; ++column1) {
+                    for (int column2 = 0; column2 < w; ++column2) {
+                        
+                        int x = column1;
+                        int y = column2;
 
-                        if (horizontal == 1) y = img.w - 1 - j;
-                        else x = img.h - 1 - i2;
+                        if (horizontal == 1) y = img.width - 1 - column2;
+                        else x = img.height - 1 - column1;
 
                         Pixel aux1;
-                        aux1.r = img.pixel[i2][j][0];
-                        aux1.g = img.pixel[i2][j][1];
-                        aux1.b = img.pixel[i2][j][2];
+                        aux1.r = img.pixel[column1][column2][0];
+                        aux1.g = img.pixel[column1][column2][1];
+                        aux1.b = img.pixel[column1][column2][2];
 
-                        img.pixel[i2][j][0] = img.pixel[x][y][0];
-                        img.pixel[i2][j][1] = img.pixel[x][y][1];
-                        img.pixel[i2][j][2] = img.pixel[x][y][2];
+                        img.pixel[column1][column2][0] = img.pixel[x][y][0];
+                        img.pixel[column1][column2][1] = img.pixel[x][y][1];
+                        img.pixel[column1][column2][2] = img.pixel[x][y][2];
 
                         img.pixel[x][y][0] = aux1.r;
                         img.pixel[x][y][1] = aux1.g;
@@ -231,17 +240,23 @@ int main() {
                 }
                 break;
             }
-            case 6: { // Inversao de Cores
-                inverter_cores(img.pixel, img.w, img.h);
+
+            case 6: { 
+                invert_colors (img.pixel, img.width, img.height);
                 break;
             }
-            case 7: { // Cortar Imagem
-                int x, y;
-                scanf("%d %d", &x, &y);
-                int w, h;
-                scanf("%d %d", &w, &h);
 
-                img = cortar_imagem(img, x, y, w, h);
+            case 7: { 
+                // Cut Imagem
+                int firstLine;
+                int secondLine;
+                scanf("%d %d", &firstLine, &secondLine);
+                
+                int width;
+                int height;
+                scanf("%d %d", &width, &height);
+
+                img = cut_image (img, firstLine, secondLine, width, height);
                 break;
             }
         }
@@ -249,16 +264,16 @@ int main() {
     }
 
     // print type of image
-    printf("P3\n");
+    printf("readImage\n");
     // print width height and color of image
-    printf("%u %u\n255\n", img.w, img.h);
+    printf("%u %u\n255\n", img.width, img.height);
 
     // print pixels of image
-    for (unsigned int i = 0; i < img.h; ++i) {
-        for (unsigned int j = 0; j < img.w; ++j) {
-            printf("%hu %hu %hu ", img.pixel[i][j][0],
-                                   img.pixel[i][j][1],
-                                   img.pixel[i][j][2]);
+    for (unsigned int column1 = 0; column1 < img.height; ++column1) {
+        for (unsigned int column2 = 0; column2 < img.width; ++column2) {
+            printf("%hu %hu %hu ", img.pixel[column1][column2][0],
+                                   img.pixel[column1][column2][1],
+                                   img.pixel[column1][column2][2]);
 
         }
         printf("\n");
