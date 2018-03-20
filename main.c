@@ -19,16 +19,6 @@ typedef struct _image {
     unsigned int height;
 } Image;
 
-// These function is used only for define a color
-int max (int firstColor, int secondColor) {
-    if (firstColor > secondColor){
-         return firstColor;
-    } 
-    else {
-        return secondColor;
-    }
-}
-
 int equal_pixel (Pixel firstPixel, Pixel secondPixel) {
     if (firstPixel.r == secondPixel.r && firstPixel.g == secondPixel.g && firstPixel.b == secondPixel.b){
         return 1;
