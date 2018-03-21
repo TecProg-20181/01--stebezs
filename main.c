@@ -62,11 +62,39 @@ void blur (unsigned int height, unsigned short int pixel[512][512][3], int aux, 
         for (column2 = 0; column2 < width; ++column2) {
             Pixel average = {0, 0, 0};
             
-            int lowerHeight = (height - 1 > column1 + aux/2) ? column1 + aux/2 : height - 1;
-            int minimumWidth = (width - 1 > column2 + aux/2) ? column2 + aux/2 : width - 1;
+            int lowerHeight;
+            int minimumWidth;
+
+            if (height - 1 > column1 + aux/2) {
+                lowerHeight = column1 + aux/2;
+            } else {
+                lowerHeight = height - 1;
+            } 
+
+            if (width - 1 > column2 + aux/2) {
+                minimumWidth = column2 + aux/2;
+            } else {
+                minimumWidth = width - 1;
+            }
             
-            for(int mark = (0 > column1 - aux/2 ? 0 : column1 - aux/2); mark <= lowerHeight; ++mark) {
-                for(int label = (0 > column2 - aux/2 ? 0 : column2 - aux/2); label <= minimumWidth; ++label) {
+            int markEquality;            ;
+
+            if (0 > column1 - aux/2){
+                markEquality = 0;
+            } else {
+                markEquality = column1 - aux/2;
+            }
+
+            for(int mark = markEquality; mark <= lowerHeight; ++mark) {
+                int aux1;
+
+                if( 0 > column2 - aux/2 ){
+                    aux1 = 0;
+                } else {
+                    aux1 = column2 - aux/2;
+                }
+
+                for(int label = aux1; label <= minimumWidth; ++label) {
                     average.r += pixel[mark][label][0];
                     average.g += pixel[mark][label][1];
                     average.b += pixel[mark][label][2];
@@ -179,16 +207,23 @@ int main() {
                         
                         // p is for pixel
                         int p =  pixel[0] * .393 + pixel[1] * .769 + pixel[2] * .189;
-                        int minorRange = (255 >  p) ? p : 255;
+
+                        int minorRange; 
+
+                        if ( 255 > p) {
+                           minorRange = p;
+                        } else {
+                           minorRange =255;
+                        }
 
                         img.pixel[column1][column2][0] = minorRange;
 
                         p =  pixel[0] * .349 + pixel[1] * .686 + pixel[2] * .168;
-                        minorRange = (255 >  p) ? p : 255;
+
                         img.pixel[column1][column2][1] = minorRange;
 
                         p =  pixel[0] * .272 + pixel[1] * .534 + pixel[2] * .131;
-                        minorRange = (255 >  p) ? p : 255;
+                      
                         img.pixel[column1][column2][2] = minorRange;
                     }
                 }
