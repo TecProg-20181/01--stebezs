@@ -30,32 +30,18 @@ int equal_pixel (Pixel firstPixel, Pixel secondPixel) {
 
 int mean_matrix (Image img) {
     int average;
-
+    int divide = 3;
     average = img.pixel[column1][column2][0] + img.pixel[column1][column2][1] +
               img.pixel[column1][column2][2];
 
-    average/= 3;
+    average/= divide;
 }
 
 void data_matrix (Image img, int average) {
-
     img.pixel[column1][column2][0] = average;
     img.pixel[column1][column2][1] = average;
     img.pixel[column1][column2][2] = average;
  }
-
-Image grey_scale (Image img) {
-
-    for (column1 = 0; column1 < img.height; ++column1) {
-        for (column2 = 0; column2 < img.width; ++column2) {
-            int average = mean_matrix (img);
-
-            data_matrix (img, average);
-        }
-    }
-
-    return img;
-}
 
 void blur (unsigned int height, unsigned short int pixel[512][512][3], int aux, unsigned int width) {
     for (column1 = 0; column1 < height; ++column1) {
@@ -70,7 +56,7 @@ void blur (unsigned int height, unsigned short int pixel[512][512][3], int aux, 
             } else {
                 lowerHeight = height - 1;
             } 
-
+            
             if (width - 1 > column2 + aux/2) {
                 minimumWidth = column2 + aux/2;
             } else {
@@ -112,6 +98,63 @@ void blur (unsigned int height, unsigned short int pixel[512][512][3], int aux, 
     }
 }
 
+void invert_colors (unsigned short int pixel[512][512][3], unsigned int width, unsigned int height) {
+    for (column1 = 0; column1 < height; ++column1) {
+        for (column2 = 0; column2 < width; ++column2) {
+            pixel[column1][column2][0] = 255 - pixel[column1][column2][0];
+            pixel[column1][column2][1] = 255 - pixel[column1][column2][1];
+            pixel[column1][column2][2] = 255 - pixel[column1][column2][2];
+        }
+    }
+}
+
+// This part will group all filters used in the project
+Image grey_scale (Image img) {
+    
+        for (column1 = 0; column1 < img.height; ++column1) {
+            for (column2 = 0; column2 < img.width; ++column2) {
+                int average = mean_matrix (img);
+    
+                data_matrix (img, average);
+            }
+        }
+    
+        return img;
+    }
+
+Image sepia_filter (Image img){
+    for (column1 = 0; column1 < img.height; ++column1) {
+        for (column2 = 0; column2 < img.width; ++column2) {
+            unsigned short int pixel[3];
+
+            pixel[0] = img.pixel[column1][column2][0];
+            pixel[1] = img.pixel[column1][column2][1];
+            pixel[2] = img.pixel[column1][column2][2];
+            
+            // p is for pixel
+            int p =  pixel[0] * .393 + pixel[1] * .769 + pixel[2] * .189;
+
+            int minorRange; 
+
+            if ( 255 > p) {
+               minorRange = p;
+            } else {
+               minorRange =255;
+            }
+
+            img.pixel[column1][column2][0] = minorRange;
+
+            p =  pixel[0] * .349 + pixel[1] * .686 + pixel[2] * .168;
+
+            img.pixel[column1][column2][1] = minorRange;
+
+            p =  pixel[0] * .272 + pixel[1] * .534 + pixel[2] * .131;
+          
+            img.pixel[column1][column2][2] = minorRange;
+        }
+    }
+}
+
 Image rotate_90_right (Image img) {
     Image rotated;
 
@@ -132,12 +175,44 @@ Image rotate_90_right (Image img) {
     return rotated;
 }
 
-void invert_colors (unsigned short int pixel[512][512][3], unsigned int width, unsigned int height) {
-    for (column1 = 0; column1 < height; ++column1) {
-        for (column2 = 0; column2 < width; ++column2) {
-            pixel[column1][column2][0] = 255 - pixel[column1][column2][0];
-            pixel[column1][column2][1] = 255 - pixel[column1][column2][1];
-            pixel[column1][column2][2] = 255 - pixel[column1][column2][2];
+Image mirror_filter (Image img){
+    int horizontal = 0;
+    scanf("%d", &horizontal);
+
+    int w = img.width;
+    int h = img.height;
+
+    if (horizontal == 1) {
+        w /= 2;
+    } else {
+        h /= 2;
+    }
+
+    for (column1 = 0; column1 < h; ++column1) {
+        for (column2 = 0; column2 < w; ++column2) {
+            
+            int x = column1;
+            int y = column2;
+
+            if (horizontal == 1) {
+                y = img.width - 1 - column2;
+            } else {
+                x = img.height - 1 - column1;
+            }
+            
+
+            Pixel aux1;
+            aux1.r = img.pixel[column1][column2][0];
+            aux1.g = img.pixel[column1][column2][1];
+            aux1.b = img.pixel[column1][column2][2];
+
+            img.pixel[column1][column2][0] = img.pixel[x][y][0];
+            img.pixel[column1][column2][1] = img.pixel[x][y][1];
+            img.pixel[column1][column2][2] = img.pixel[x][y][2];
+
+            img.pixel[x][y][0] = aux1.r;
+            img.pixel[x][y][1] = aux1.g;
+            img.pixel[x][y][2] = aux1.b;
         }
     }
 }
@@ -197,37 +272,7 @@ int main() {
 
             case 2: { 
                 //Sepia filter
-                for (column1 = 0; column1 < img.height; ++column1) {
-                    for (column2 = 0; column2 < img.width; ++column2) {
-                        unsigned short int pixel[3];
-
-                        pixel[0] = img.pixel[column1][column2][0];
-                        pixel[1] = img.pixel[column1][column2][1];
-                        pixel[2] = img.pixel[column1][column2][2];
-                        
-                        // p is for pixel
-                        int p =  pixel[0] * .393 + pixel[1] * .769 + pixel[2] * .189;
-
-                        int minorRange; 
-
-                        if ( 255 > p) {
-                           minorRange = p;
-                        } else {
-                           minorRange =255;
-                        }
-
-                        img.pixel[column1][column2][0] = minorRange;
-
-                        p =  pixel[0] * .349 + pixel[1] * .686 + pixel[2] * .168;
-
-                        img.pixel[column1][column2][1] = minorRange;
-
-                        p =  pixel[0] * .272 + pixel[1] * .534 + pixel[2] * .131;
-                      
-                        img.pixel[column1][column2][2] = minorRange;
-                    }
-                }
-
+                img = sepia_filter (img);
                 break;
             }
 
@@ -251,45 +296,7 @@ int main() {
             }
 
             case 5: { // Mirroring
-                int horizontal = 0;
-                scanf("%d", &horizontal);
-
-                int w = img.width;
-                int h = img.height;
-
-                if (horizontal == 1) {
-                    w /= 2;
-                } else {
-                    h /= 2;
-                }
-
-                for (column1 = 0; column1 < h; ++column1) {
-                    for (column2 = 0; column2 < w; ++column2) {
-                        
-                        int x = column1;
-                        int y = column2;
-
-                        if (horizontal == 1) {
-                            y = img.width - 1 - column2;
-                        } else {
-                            x = img.height - 1 - column1;
-                        }
-                        
-
-                        Pixel aux1;
-                        aux1.r = img.pixel[column1][column2][0];
-                        aux1.g = img.pixel[column1][column2][1];
-                        aux1.b = img.pixel[column1][column2][2];
-
-                        img.pixel[column1][column2][0] = img.pixel[x][y][0];
-                        img.pixel[column1][column2][1] = img.pixel[x][y][1];
-                        img.pixel[column1][column2][2] = img.pixel[x][y][2];
-
-                        img.pixel[x][y][0] = aux1.r;
-                        img.pixel[x][y][1] = aux1.g;
-                        img.pixel[x][y][2] = aux1.b;
-                    }
-                }
+                img = mirror_filter (img);
                 break;
             }
 
