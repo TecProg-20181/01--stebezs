@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-unsigned int column1;
-unsigned int column2;
+unsigned int column;
+unsigned int row;
 
 typedef struct _pixel {
     // Is a RGB (red, green, blue) type of image for an additive color system
@@ -31,53 +31,55 @@ int equal_pixel (Pixel firstPixel, Pixel secondPixel) {
 int mean_matrix (Image img) {
     int average;
     int divide = 3;
-    average = img.pixel[column1][column2][0] + img.pixel[column1][column2][1] +
-              img.pixel[column1][column2][2];
+    average = img.pixel[column][row][0] + img.pixel[column][row][1] +
+              img.pixel[column][row][2];
 
     average/= divide;
+
+    return average;
 }
 
 void data_matrix (Image img, int average) {
-    img.pixel[column1][column2][0] = average;
-    img.pixel[column1][column2][1] = average;
-    img.pixel[column1][column2][2] = average;
+    img.pixel[column][row][0] = average;
+    img.pixel[column][row][1] = average;
+    img.pixel[column][row][2] = average;
  }
 
 void blur (unsigned int height, unsigned short int pixel[512][512][3], int aux, unsigned int width) {
-    for (column1 = 0; column1 < height; ++column1) {
-        for (column2 = 0; column2 < width; ++column2) {
+    for (column = 0; column < height; ++column) {
+        for (row = 0; row < width; ++row) {
             Pixel average = {0, 0, 0};
             
             int lowerHeight;
             int minimumWidth;
 
-            if (height - 1 > column1 + aux/2) {
-                lowerHeight = column1 + aux/2;
+            if (height - 1 > column + aux/2) {
+                lowerHeight = column + aux/2;
             } else {
                 lowerHeight = height - 1;
             } 
             
-            if (width - 1 > column2 + aux/2) {
-                minimumWidth = column2 + aux/2;
+            if (width - 1 > row + aux/2) {
+                minimumWidth = row + aux/2;
             } else {
                 minimumWidth = width - 1;
             }
             
             int markEquality;            ;
 
-            if (0 > column1 - aux/2){
+            if (0 > column - aux/2){
                 markEquality = 0;
             } else {
-                markEquality = column1 - aux/2;
+                markEquality = column - aux/2;
             }
 
             for(int mark = markEquality; mark <= lowerHeight; ++mark) {
                 int aux1;
 
-                if( 0 > column2 - aux/2 ){
+                if( 0 > row - aux/2 ){
                     aux1 = 0;
                 } else {
-                    aux1 = column2 - aux/2;
+                    aux1 = row - aux/2;
                 }
 
                 for(int label = aux1; label <= minimumWidth; ++label) {
@@ -91,19 +93,19 @@ void blur (unsigned int height, unsigned short int pixel[512][512][3], int aux, 
             average.g /= aux * aux;
             average.b /= aux * aux;
 
-            pixel[column1][column2][0] = average.r;
-            pixel[column1][column2][1] = average.g;
-            pixel[column1][column2][2] = average.b;
+            pixel[column][row][0] = average.r;
+            pixel[column][row][1] = average.g;
+            pixel[column][row][2] = average.b;
         }
     }
 }
 
 void invert_colors (unsigned short int pixel[512][512][3], unsigned int width, unsigned int height) {
-    for (column1 = 0; column1 < height; ++column1) {
-        for (column2 = 0; column2 < width; ++column2) {
-            pixel[column1][column2][0] = 255 - pixel[column1][column2][0];
-            pixel[column1][column2][1] = 255 - pixel[column1][column2][1];
-            pixel[column1][column2][2] = 255 - pixel[column1][column2][2];
+    for (column = 0; column < height; ++column) {
+        for (row = 0; row < width; ++row) {
+            pixel[column][row][0] = 255 - pixel[column][row][0];
+            pixel[column][row][1] = 255 - pixel[column][row][1];
+            pixel[column][row][2] = 255 - pixel[column][row][2];
         }
     }
 }
@@ -111,48 +113,50 @@ void invert_colors (unsigned short int pixel[512][512][3], unsigned int width, u
 // This part will group all filters used in the project
 Image grey_scale (Image img) {
     
-        for (column1 = 0; column1 < img.height; ++column1) {
-            for (column2 = 0; column2 < img.width; ++column2) {
+        for (column = 0; column < img.height; ++column) {
+            for (row = 0; row < img.width; ++row) {
                 int average = mean_matrix (img);
     
                 data_matrix (img, average);
             }
         }
-    
         return img;
     }
 
 Image sepia_filter (Image img){
-    for (column1 = 0; column1 < img.height; ++column1) {
-        for (column2 = 0; column2 < img.width; ++column2) {
+
+    for (column = 0; column < img.height; ++column) {
+        for (row = 0; row < img.width; ++row) {
             unsigned short int pixel[3];
 
-            pixel[0] = img.pixel[column1][column2][0];
-            pixel[1] = img.pixel[column1][column2][1];
-            pixel[2] = img.pixel[column1][column2][2];
+            pixel[0] = img.pixel[column][row][0];
+            pixel[1] = img.pixel[column][row][1];
+            pixel[2] = img.pixel[column][row][2];
             
             // p is for pixel
             int p =  pixel[0] * .393 + pixel[1] * .769 + pixel[2] * .189;
 
             int minorRange; 
+            int maxRGB = 255;
 
-            if ( 255 > p) {
+            if ( maxRGB > p) {
                minorRange = p;
             } else {
-               minorRange =255;
+               minorRange = maxRGB;
             }
 
-            img.pixel[column1][column2][0] = minorRange;
+            img.pixel[column][row][0] = minorRange;
 
             p =  pixel[0] * .349 + pixel[1] * .686 + pixel[2] * .168;
 
-            img.pixel[column1][column2][1] = minorRange;
+            img.pixel[column][row][1] = minorRange;
 
             p =  pixel[0] * .272 + pixel[1] * .534 + pixel[2] * .131;
           
-            img.pixel[column1][column2][2] = minorRange;
+            img.pixel[column][row][2] = minorRange;
         }
     }
+    return img;
 }
 
 Image rotate_90_right (Image img) {
@@ -164,11 +168,11 @@ Image rotate_90_right (Image img) {
     rotated.width = img.height;
     rotated.height = img.width;
 
-    for (column1 = 0, lineOne = 0; column1 < rotated.height; ++column1, ++lineOne) {
-        for (column2 = rotated.width - 1, lineTwo = 0; column2 >= 0; --column2, ++lineTwo) {
-            rotated.pixel[column1][column2][0] = img.pixel[lineOne][lineTwo][0];
-            rotated.pixel[column1][column2][1] = img.pixel[lineOne][lineTwo][1];
-            rotated.pixel[column1][column2][2] = img.pixel[lineOne][lineTwo][2];
+    for (column = 0, lineOne = 0; column < rotated.height; ++column, ++lineOne) {
+        for (row = rotated.width - 1, lineTwo = 0; row >= 0; --row, ++lineTwo) {
+            rotated.pixel[column][row][0] = img.pixel[lineOne][lineTwo][0];
+            rotated.pixel[column][row][1] = img.pixel[lineOne][lineTwo][1];
+            rotated.pixel[column][row][2] = img.pixel[lineOne][lineTwo][2];
         }
     }
 
@@ -188,34 +192,35 @@ Image mirror_filter (Image img){
         h /= 2;
     }
 
-    for (column1 = 0; column1 < h; ++column1) {
-        for (column2 = 0; column2 < w; ++column2) {
+    for (column = 0; column < h; ++column) {
+        for (row = 0; row < w; ++row) {
             
-            int x = column1;
-            int y = column2;
+            int x = column;
+            int y = row;
 
             if (horizontal == 1) {
-                y = img.width - 1 - column2;
+                y = img.width - 1 - row;
             } else {
-                x = img.height - 1 - column1;
+                x = img.height - 1 - column;
             }
             
 
             Pixel aux1;
-            aux1.r = img.pixel[column1][column2][0];
-            aux1.g = img.pixel[column1][column2][1];
-            aux1.b = img.pixel[column1][column2][2];
+            aux1.r = img.pixel[column][row][0];
+            aux1.g = img.pixel[column][row][1];
+            aux1.b = img.pixel[column][row][2];
 
-            img.pixel[column1][column2][0] = img.pixel[x][y][0];
-            img.pixel[column1][column2][1] = img.pixel[x][y][1];
-            img.pixel[column1][column2][2] = img.pixel[x][y][2];
+            img.pixel[column][row][0] = img.pixel[x][y][0];
+            img.pixel[column][row][1] = img.pixel[x][y][1];
+            img.pixel[column][row][2] = img.pixel[x][y][2];
 
             img.pixel[x][y][0] = aux1.r;
             img.pixel[x][y][1] = aux1.g;
             img.pixel[x][y][2] = aux1.b;
         }
     }
-}
+    return img;
+} 
 
 Image cut_image (Image img, int firtsRow, int secondRow, int w, int h) {
     Image cutting;
@@ -223,11 +228,11 @@ Image cut_image (Image img, int firtsRow, int secondRow, int w, int h) {
     cutting.width = w;
     cutting.height = h;
 
-    for(column1 = 0; column1 < h; ++column1) {
-        for(column2 = 0; column2 < w; ++column2) {
-            cutting.pixel[column1][column2][0] = img.pixel[column1 + firtsRow][column2 + secondRow][0];
-            cutting.pixel[column1][column2][1] = img.pixel[column1 + firtsRow][column2 + secondRow][1];
-            cutting.pixel[column1][column2][2] = img.pixel[column1 + firtsRow][column2 + secondRow][2];
+    for(column = 0; column < h; ++column) {
+        for(row = 0; row < w; ++row) {
+            cutting.pixel[column][row][0] = img.pixel[column + firtsRow][row + secondRow][0];
+            cutting.pixel[column][row][1] = img.pixel[column + firtsRow][row + secondRow][1];
+            cutting.pixel[column][row][2] = img.pixel[column + firtsRow][row + secondRow][2];
         }
     }
 
@@ -247,11 +252,11 @@ int main() {
     scanf("%u %u %d", &img.width, &img.height, &max_color);
 
     // read all pixels of image
-    for (unsigned int column1 = 0; column1 < img.height; ++column1) {
-        for (unsigned int column2 = 0; column2 < img.width; ++column2) {
-            scanf("%hu %hu %hu", &img.pixel[column1][column2][0],
-                                 &img.pixel[column1][column2][1],
-                                 &img.pixel[column1][column2][2]);
+    for (unsigned int column = 0; column < img.height; ++column) {
+        for (unsigned int row = 0; row < img.width; ++row) {
+            scanf("%hu %hu %hu", &img.pixel[column][row][0],
+                                 &img.pixel[column][row][1],
+                                 &img.pixel[column][row][2]);
 
         }
     }
@@ -328,11 +333,11 @@ int main() {
     printf("%u %u\n255\n", img.width, img.height);
 
     // print pixels of image
-    for (unsigned int column1 = 0; column1 < img.height; ++column1) {
-        for (unsigned int column2 = 0; column2 < img.width; ++column2) {
-            printf("%hu %hu %hu ", img.pixel[column1][column2][0],
-                                   img.pixel[column1][column2][1],
-                                   img.pixel[column1][column2][2]);
+    for (unsigned int column = 0; column < img.height; ++column) {
+        for (unsigned int row = 0; row < img.width; ++row) {
+            printf("%hu %hu %hu ", img.pixel[column][row][0],
+                                   img.pixel[column][row][1],
+                                   img.pixel[column][row][2]);
 
         }
         printf("\n");
